@@ -1,0 +1,19 @@
+# Vercel deploys from Git, so untracked files normally never reach it.
+# This file is belt-and-braces for `vercel deploy` run from a laptop, which
+# uploads the local directory: without it, a stray .env.local containing real
+# passwords could be shipped to a public deployment.
+#
+# Environment variables belong in the Vercel dashboard, never in an uploaded file.
+
+.env
+.env.*
+!.env.example
+
+node_modules
+dist
+build
+
+.git
+docs
+*.log
+.DS_Store
