@@ -25,9 +25,11 @@ type Props = {
   loading: boolean
   error: string | null
   onRetry: () => void
+  /** True when a search or priority filter is active. */
+  filtered?: boolean
 }
 
-export function ContactList({ contacts, loading, error, onRetry }: Props) {
+export function ContactList({ contacts, loading, error, onRetry, filtered }: Props) {
   // LOADING
   if (loading) {
     return (
@@ -54,15 +56,28 @@ export function ContactList({ contacts, loading, error, onRetry }: Props) {
     )
   }
 
-  // EMPTY
+  // EMPTY -- two different situations that deserve different wording.
+  // "No contacts yet" is wrong and confusing when the list is empty only
+  // because a filter excluded everything.
   if (contacts.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="py-12 text-center">
-          <p className="font-medium">No contacts yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add the first person you want to stay in touch with.
-          </p>
+          {filtered ? (
+            <>
+              <p className="font-medium">No matches</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                No contacts match your search or filter. Try clearing them.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium">No contacts yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Add the first person you want to stay in touch with.
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     )
