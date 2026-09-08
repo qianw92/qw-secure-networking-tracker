@@ -294,25 +294,42 @@ Before pushing, verify no real value ever entered history:
 
 ### Remaining
 
-4. **Friendly validation messages (browser).** Catch blank names and bad priorities before
-   they hit the database, and translate any Postgres error that does surface into human
-   language. Today a blank name shows
-   `new row for relation "contacts" violates check constraint "contacts_name_not_blank"` —
-   safe, but unacceptable as UX and it leaks internal table names.
-   **This is a courtesy layer, not a defense.** Anything in the browser can be bypassed.
-5. **The backend tier (`apps/api`).** The second of the two builds. Express + Zod.
-6. **Rewire the frontend** to call the API instead of the Data API directly. Touches only
-   `lib/contacts.ts` by design.
-7. **Edit + delete**, built once, against the API.
-8. **Sort + filter**, server-side via PostgREST `.order()` / `.eq()` / `.ilike()`.
-9. **Deploy** — two Vercel projects, production env vars, both domains added to Neon Auth
-   trusted origins.
-10. **README** — live URLs, screenshots, test output, all grading evidence.
+4. ✅ **Friendly validation messages (browser)** (`18a2298`) — Zod rules with written-out
+   messages, inline per-field errors, and `humanizeError()` so no Postgres text ever reaches
+   the screen. Fixed a circular import found only at runtime; the production build passed
+   while the app was broken.
+5. ✅ **The backend tier (`apps/api`)** (`f9a0071`) — Express 5 + Zod, own build, own
+   `vercel.json`. Holds no database credential; forwards the caller's JWT. 21 tests.
+6. ✅ **Rewire the frontend** (`f72bb62`) — contact data now goes through the API; zero
+   direct Data API calls remain. Two real bugs found: the documented token accessor does not
+   exist (use `auth.token()`, not `session.access_token`), and `npm run dev:api` never loaded
+   its env file.
+7. ✅ **Sort + filter** (`0fe923c`) — pulled forward ahead of edit/delete at Qianyin's
+   request. Server-side via PostgREST, 300ms debounce, stale-response guard, split empty
+   states. Sort columns are allowlisted; `sort=user_id;drop` is ignored.
+8. ✅ **Edit + delete** (`8a650e6`) — dialogs sharing `ContactFields` with the add form.
+   Cross-user PATCH and DELETE both return 404, identical to a non-existent id, so existence
+   cannot be probed.
 
-**Why edit/delete/sort/filter come after the API tier (steps 7–8, not now):** building them
-against the Data API today means rewriting them in step 6. Writing them once, against the
-final architecture, is strictly less work. The functional requirements are not being skipped —
-they are sequenced to avoid building the same feature twice.
+**Steps 7 and 8 swapped order** against the original plan. No rework resulted: both were built
+after the API tier, which was the actual constraint.
+
+### Actually remaining
+
+9. **Automated two-account isolation test.** The only outstanding *code* item. Everything it
+   asserts has been verified by hand and recorded in README §12 — this turns that into
+   something a grader can run. Needs a second set of test credentials.
+10. **Deploy** — two Vercel projects, production env vars, both domains added to Neon Auth
+    trusted origins. Needs Qianyin's Vercel account.
+11. **README evidence** — live URLs and screenshots (sign-in/out, CRUD, refresh, the
+    two-account test, an invalid input failing). Everything else in the README is written.
+
+**Test accounts.** Two exist and are already isolated in practice:
+`test-a@example.com` (3 contacts) and `the project owner's own account` (2). Signed in as one, the app
+never shows the other's rows. The password for the second is Qianyin's own and is not recorded
+here, so step 9 needs either that password supplied at runtime via `.env.local`, or a
+purpose-made `test-b@example.com`. **A purpose-made account is the better option** — no
+personal credential ends up in a test fixture.
 
 ---
 
