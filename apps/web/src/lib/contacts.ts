@@ -65,3 +65,50 @@ export async function createContact(draft: ContactDraft): Promise<Contact> {
   if (!created) throw new Error('The contact was not saved. Please try again.')
   return created
 }
+
+/**
+ * Update a contact.
+ *
+ * The id goes in the URL, never in the body. Even so, the caller cannot
+ * reach another person's row: the API sends the update with this user's own
+ * token, and the RLS update policy matches only rows they own. A request for
+ * someone else's id affects zero rows and comes back 404 -- the same answer
+ * as an id that does not exist, so the response cannot be used to work out
+ * whether another user's contact is real.
+ */
+export async function updateContact(
+  id: string,
+  draft: ContactDraft,
+): Promise<Contact> {
+  const updated = await apiFetch<Contact>(`/contacts/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      name: draft.name,
+      company: draft.company,
+      role: draft.role,
+      met_where: draft.met_where,
+      notes: draft.notes,
+      priority: draft.priority,
+    }),
+  })
+
+  if (!updated) throw new Error('The contact was not updated. Please try again.')
+  return updated
+}
+
+/** Delete a contact. Returns nothing; the API replies 204 on success. */
+export async function deleteContact(id: string): Promise<void> {
+  await apiFetch<null>(`/contacts/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+/** Turn a saved contact back into the shape the form edits. */
+export function toDraft(contact: Contact): ContactDraft {
+  return {
+    name: contact.name,
+    company: contact.company ?? '',
+    role: contact.role ?? '',
+    met_where: contact.met_where ?? '',
+    notes: contact.notes ?? '',
+    priority: contact.priority,
+  }
+}

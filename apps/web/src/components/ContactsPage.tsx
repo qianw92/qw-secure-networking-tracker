@@ -3,11 +3,17 @@ import { listContacts, type Contact, type ListOptions } from '@/lib/contacts'
 import { ContactForm } from '@/components/ContactForm'
 import { ContactList } from '@/components/ContactList'
 import { ContactFilters } from '@/components/ContactFilters'
+import { EditContactDialog } from '@/components/EditContactDialog'
+import { DeleteContactDialog } from '@/components/DeleteContactDialog'
 
 export function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Which contact each dialog is acting on. null means closed.
+  const [editing, setEditing] = useState<Contact | null>(null)
+  const [deleting, setDeleting] = useState<Contact | null>(null)
 
   const [options, setOptions] = useState<ListOptions>({
     sort: 'created_at',
@@ -81,8 +87,22 @@ export function ContactsPage() {
           error={error}
           onRetry={() => void load(query)}
           filtered={Boolean(debouncedQ.trim()) || (options.priority ?? 'all') !== 'all'}
+          onEdit={setEditing}
+          onDelete={setDeleting}
         />
       </div>
+
+      <EditContactDialog
+        contact={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => void load(query)}
+      />
+
+      <DeleteContactDialog
+        contact={deleting}
+        onClose={() => setDeleting(null)}
+        onDeleted={() => void load(query)}
+      />
     </div>
   )
 }

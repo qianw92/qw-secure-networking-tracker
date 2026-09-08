@@ -27,9 +27,19 @@ type Props = {
   onRetry: () => void
   /** True when a search or priority filter is active. */
   filtered?: boolean
+  onEdit: (c: Contact) => void
+  onDelete: (c: Contact) => void
 }
 
-export function ContactList({ contacts, loading, error, onRetry, filtered }: Props) {
+export function ContactList({
+  contacts,
+  loading,
+  error,
+  onRetry,
+  filtered,
+  onEdit,
+  onDelete,
+}: Props) {
   // LOADING
   if (loading) {
     return (
@@ -105,6 +115,20 @@ export function ContactList({ contacts, loading, error, onRetry, filtered }: Pro
                 <p className="mt-2 text-sm text-muted-foreground">Met at {c.met_where}</p>
               )}
               {c.notes && <p className="mt-2 text-sm">{c.notes}</p>}
+
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => onEdit(c)}>
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => onDelete(c)}
+                >
+                  Delete
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -121,6 +145,9 @@ export function ContactList({ contacts, loading, error, onRetry, filtered }: Pro
                 <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Where we met</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
+                <th className="px-4 py-3 text-right font-medium">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -132,6 +159,21 @@ export function ContactList({ contacts, loading, error, onRetry, filtered }: Pro
                   <td className="px-4 py-3 text-muted-foreground">{c.met_where ?? '—'}</td>
                   <td className="px-4 py-3">
                     <PriorityBadge priority={c.priority} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => onEdit(c)}>
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => onDelete(c)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

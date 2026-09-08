@@ -40,8 +40,8 @@ entirely comes back empty.
 | Blank names and invalid priorities fail with a clear message | ✅ |
 | Loading, empty, error, and populated states | ✅ |
 | Works on phone and desktop | ✅ |
-| **Edit a contact** | ⬜ API done, no UI yet |
-| **Delete a contact** | ⬜ API done, no UI yet |
+| Edit a contact | ✅ |
+| Delete a contact, with a confirmation step | ✅ |
 
 ---
 
@@ -307,6 +307,9 @@ as someone with developer tools would:
 | `priority: "urgent"` | `400` — "Priority must be high, medium, or low." |
 | No token | `401` — "You must be signed in to do that." |
 | **A forged `user_id`** | `201`, **stored under the caller's own id** |
+| `PATCH` on another user's contact | `404` — row unchanged |
+| `DELETE` on another user's contact | `404` — row still present |
+| `PATCH` on an id that does not exist | `404` — **identical response**, so existence cannot be probed |
 
 That last row is the ownership proof: ownership was explicitly claimed for another user and
 the database assigned the row to the caller anyway.
@@ -330,7 +333,6 @@ accounts. Signed in as one, the app lists only that account's rows and never the
 
 ## 14. Known Limitations
 
-- **Edit and delete are not in the UI.** Both API routes exist and are tested; the buttons are not built.
 - **No automated isolation test.** Verified manually; not yet a test that runs on demand.
 - **The API does not verify the JWT signature itself.** It forwards the token and lets Neon validate it, relying on RLS as the boundary. Correct, but a forged token travels further into the system than necessary. Verifying at the edge with `jose` against Neon's JWKS would fail faster.
 - **Validation rules are written twice** — once in the browser for speed, once in the API for trust. They can drift. A shared package would fix it; the database constraints are the backstop either way.
