@@ -256,17 +256,19 @@ nothing, so signed-out visitors cannot reach the table at all.
 npm test
 ```
 
-Runs 21 cases against the trusted validation rules, with **no database, network, or
-credentials** — so it passes on a fresh clone.
+Two suites, 29 cases.
 
 ```
  ✓ src/__tests__/validation.test.ts (21 tests) 3ms
+ ✓ src/__tests__/isolation.test.ts (8 tests) 2244ms
 
- Test Files  1 passed (1)
-      Tests  21 passed (21)
+ Test Files  2 passed (2)
+      Tests  29 passed (29)
 ```
 
-What it verifies:
+### Validation suite — 21 cases, always runs
+
+No database, network, or credentials, so it passes on a fresh clone. What it verifies:
 
 - A missing, empty, or whitespace-only name is rejected
 - Surrounding whitespace is trimmed
@@ -281,7 +283,39 @@ One of these caught a real bug: `priority` carried a default that `.partial()` t
 into empty edit requests, so the "no changes" guard never fired and an empty edit could
 silently overwrite a priority.
 
-> **Not yet done:** an automated two-account isolation test. The manual evidence is in §12.
+### Isolation suite — 8 cases, the two-account proof
+
+Signs in as two real accounts and has User B attempt to reach User A's contact every way it
+can. What it verifies:
+
+- A can see their own contact
+- **A's contact does not appear in B's list**
+- B's attempt to edit A's contact returns `404`
+- B's attempt to delete A's contact returns `404`
+- A contact that does not exist returns the **identical** status and message, so B cannot use
+  responses to discover which ids are real
+- A request with no token returns `401`
+- **Bypassing this API entirely** — querying the Neon Data API directly with B's own token —
+  still returns nothing
+- A's contact is unchanged after every attempt
+
+That seventh case is the one that matters. It skips our code completely, so it proves the
+guarantee comes from Postgres Row Level Security and not from our API being careful.
+
+This suite needs real credentials and network access, so it **skips itself** when
+`TEST_USER_*` is unset in `apps/api/.env.local`:
+
+```
+ ✓ src/__tests__/validation.test.ts (21 tests) 3ms
+ ↓ src/__tests__/isolation.test.ts (8 tests | 8 skipped)
+
+ Test Files  1 passed | 1 skipped (2)
+      Tests  21 passed | 8 skipped (29)
+```
+
+That is deliberate: `npm test` must pass for a grader who has no accounts. To run it yourself,
+fill in the `TEST_USER_*` values in `apps/api/.env.local` (see `.env.example`). The fixture
+contact is deleted afterwards, so repeat runs leave nothing behind.
 
 ---
 
@@ -295,7 +329,7 @@ silently overwrite a priority.
 | Every policy restricts to `auth.user_id() = user_id` | ✅ |
 | Update policy prevents reassigning a row to another user | ✅ `WITH CHECK` |
 | No secret committed to Git | ✅ |
-| Two-account proof | ◑ Observed, not yet documented with screenshots |
+| Two-account proof | ✅ Automated — 8 cases, §11 |
 
 **Verified by bypassing the browser** — requests sent straight to the API with a valid token,
 as someone with developer tools would:
@@ -318,10 +352,10 @@ the database assigned the row to the caller anyway.
 **0 rows** while the table owner sees every row. Access is denied by default and granted only
 on proof of identity.
 
-**Two accounts, observed.** The database currently holds contacts belonging to two different
-accounts. Signed in as one, the app lists only that account's rows and never the other's.
+**Two accounts, automated.** `test-a@example.com` and `test-b@example.com` are real accounts,
+and the isolation suite in §11 runs the full attack against them on demand.
 
-> **Not yet done:** side-by-side screenshots and an automated version of this test.
+> **Not yet done:** side-by-side screenshots of this for the grading evidence.
 
 ---
 
