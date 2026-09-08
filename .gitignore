@@ -1,2 +1,17 @@
+# Dependencies
 node_modules/
-.env.local
+
+# Secrets — never commit real values.
+# The negation keeps .env.example, which MUST be committed.
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.vercel/
+
+# Editor / OS noise
+.DS_Store
+*.log

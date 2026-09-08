@@ -1,5 +1,16 @@
 {
-  "devDependencies": {
-    "supabase": "^2.116.0"
+  "name": "qw-secure-networking-tracker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A private networking tracker for Berkeley contacts, secured with Postgres Row Level Security.",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web"
   }
 }
