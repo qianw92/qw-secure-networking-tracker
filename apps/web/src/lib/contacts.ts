@@ -1,4 +1,10 @@
 import { client } from '@/lib/neon'
+import { humanizeError } from '@/lib/validation'
+import type { Contact, ContactDraft } from '@/lib/types'
+
+// Re-exported so components can keep importing these from one place.
+export { PRIORITIES, EMPTY_DRAFT } from '@/lib/types'
+export type { Contact, ContactDraft, Priority } from '@/lib/types'
 
 /**
  * Every read and write of contacts goes through this file.
@@ -7,41 +13,6 @@ import { client } from '@/lib/neon'
  * Express backend later, only this file changes -- the UI components keep
  * calling listContacts() and createContact() exactly as they do now.
  */
-
-export const PRIORITIES = ['high', 'medium', 'low'] as const
-export type Priority = (typeof PRIORITIES)[number]
-
-export type Contact = {
-  id: string
-  user_id: string
-  name: string
-  company: string | null
-  role: string | null
-  met_where: string | null
-  notes: string | null
-  priority: Priority
-  created_at: string
-  updated_at: string
-}
-
-/** The fields a person actually types in. */
-export type ContactDraft = {
-  name: string
-  company: string
-  role: string
-  met_where: string
-  notes: string
-  priority: Priority
-}
-
-export const EMPTY_DRAFT: ContactDraft = {
-  name: '',
-  company: '',
-  role: '',
-  met_where: '',
-  notes: '',
-  priority: 'medium',
-}
 
 /** Turn "" into null so the database stores absent values consistently. */
 function blankToNull(value: string): string | null {
@@ -62,7 +33,7 @@ export async function listContacts(): Promise<Contact[]> {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(humanizeError(error.message))
   return (data ?? []) as Contact[]
 }
 
@@ -86,7 +57,7 @@ export async function createContact(draft: ContactDraft): Promise<Contact> {
     })
     .select()
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(humanizeError(error.message))
 
   const created = (data as Contact[] | null)?.[0]
   if (!created) throw new Error('The contact was not saved. Please try again.')
