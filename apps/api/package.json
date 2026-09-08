@@ -5,10 +5,11 @@
   "type": "module",
   "description": "Backend API for the Secure Networking Tracker. Validates input and forwards the caller's token to the Neon Data API.",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch --env-file-if-exists=.env.local src/server.ts",
     "build": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "start": "tsx --env-file-if-exists=.env.local src/server.ts"
   },
   "dependencies": {
     "@neondatabase/neon-js": "^0.7.0-beta",

@@ -1,5 +1,4 @@
-import { client } from '@/lib/neon'
-import { humanizeError } from '@/lib/validation'
+import { apiFetch } from '@/lib/api'
 import type { Contact, ContactDraft } from '@/lib/types'
 
 // Re-exported so components can keep importing these from one place.
@@ -9,57 +8,60 @@ export type { Contact, ContactDraft, Priority } from '@/lib/types'
 /**
  * Every read and write of contacts goes through this file.
  *
- * Keeping data access in one place means that when we add the separate
- * Express backend later, only this file changes -- the UI components keep
- * calling listContacts() and createContact() exactly as they do now.
+ * These calls used to go straight to the Neon Data API. They now go to
+ * apps/api instead, which validates the input before touching the database.
+ * Because all data access was already in this one file, the components did
+ * not change at all -- ContactForm and ContactList still call the same
+ * functions with the same arguments.
+ *
+ * What did NOT change is who enforces ownership. The API forwards the user's
+ * own token to Postgres, so Row Level Security still decides which rows they
+ * can see. Notice there is still no "where user_id = me" anywhere in this
+ * file, or in the API. The database applies it, every time.
  */
 
-/** Turn "" into null so the database stores absent values consistently. */
-function blankToNull(value: string): string | null {
-  const trimmed = value.trim()
-  return trimmed === '' ? null : trimmed
+/** Options for listing. All optional; the API defaults them. */
+export type ListOptions = {
+  sort?: 'created_at' | 'name' | 'priority' | 'company'
+  dir?: 'asc' | 'desc'
+  priority?: string
+  q?: string
 }
 
-/**
- * Fetch the signed-in user's contacts, newest first.
- *
- * Note there is no "where user_id = me" here. We never ask for it, because
- * Row Level Security applies that filter inside Postgres on every query.
- * Even a bug in this file cannot leak another user's rows.
- */
-export async function listContacts(): Promise<Contact[]> {
-  const { data, error } = await client
-    .from('contacts')
-    .select('*')
-    .order('created_at', { ascending: false })
+export async function listContacts(options: ListOptions = {}): Promise<Contact[]> {
+  const params = new URLSearchParams()
+  if (options.sort) params.set('sort', options.sort)
+  if (options.dir) params.set('dir', options.dir)
+  if (options.priority && options.priority !== 'all') {
+    params.set('priority', options.priority)
+  }
+  if (options.q?.trim()) params.set('q', options.q.trim())
 
-  if (error) throw new Error(humanizeError(error.message))
-  return (data ?? []) as Contact[]
+  const query = params.toString()
+  const data = await apiFetch<Contact[]>(`/contacts${query ? `?${query}` : ''}`)
+  return data ?? []
 }
 
 /**
  * Create a contact.
  *
- * We deliberately do NOT send user_id. The database fills it in from the
- * signed-in user's token via the column default auth.user_id(). That is what
- * makes it impossible to create a row owned by someone else.
+ * We send only what the person typed. There is no user_id here, and if one
+ * were added it would be stripped by the API's schema and overridden by the
+ * database's auth.user_id() default. Ownership is not the browser's to decide.
  */
 export async function createContact(draft: ContactDraft): Promise<Contact> {
-  const { data, error } = await client
-    .from('contacts')
-    .insert({
-      name: draft.name.trim(),
-      company: blankToNull(draft.company),
-      role: blankToNull(draft.role),
-      met_where: blankToNull(draft.met_where),
-      notes: blankToNull(draft.notes),
+  const created = await apiFetch<Contact>('/contacts', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: draft.name,
+      company: draft.company,
+      role: draft.role,
+      met_where: draft.met_where,
+      notes: draft.notes,
       priority: draft.priority,
-    })
-    .select()
+    }),
+  })
 
-  if (error) throw new Error(humanizeError(error.message))
-
-  const created = (data as Contact[] | null)?.[0]
   if (!created) throw new Error('The contact was not saved. Please try again.')
   return created
 }
