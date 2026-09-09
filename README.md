@@ -9,14 +9,26 @@ guarantee is enforced by the database itself rather than by the app being polite
 Row Level Security rejects rows that are not yours, so even a request that skips the app
 entirely comes back empty.
 
-> **Status: in progress.** Sections marked _Not yet done_ are honest gaps, not oversights.
+> **Status: deployed and working.** The only remaining gap is screenshots (§2).
 > The build order is tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
 ## 1. Live URL
 
-> _Not yet done — the app has not been deployed. It runs locally; see §7._
+**→ https://qw-network-tracker.vercel.app** — open this one.
+
+| | |
+|---|---|
+| App (frontend) | https://qw-network-tracker.vercel.app |
+| API (backend) | https://qw-network-tracker-api.vercel.app |
+| API health check | https://qw-network-tracker-api.vercel.app/health |
+
+Two URLs because the frontend and backend are two separate applications with
+separate builds and separate deployments. The API serves no pages; opening it directly
+shows only JSON. **Sign in at the first URL.**
+
+Test accounts are in §12 if you want to see the two-account isolation for yourself.
 
 ---
 
@@ -367,7 +379,52 @@ and the isolation suite in §11 runs the full attack against them on demand.
 
 ## 13. Deployment
 
-> _Not yet done._
+Two Vercel projects from one repository, deployed with the Vercel CLI.
+
+```bash
+# Backend
+cd apps/api
+npx vercel link --yes --project qw-network-tracker-api
+npx vercel env add NEON_DATA_API_URL production      # --type secret
+npx vercel env add ALLOWED_ORIGINS production        # the frontend's URL
+npx vercel deploy --prod
+
+# Frontend
+cd apps/web
+npx vercel link --yes --project qw-network-tracker
+npx vercel env add NEXT_PUBLIC_NEON_AUTH_URL production      --type config
+npx vercel env add NEXT_PUBLIC_NEON_DATA_API_URL production  --type config
+npx vercel env add NEXT_PUBLIC_API_BASE_URL production       --type config
+npx vercel deploy --prod
+```
+
+Finally, add the deployed frontend domain to Neon Auth's trusted origins. **Sign-in fails
+silently in production without this** — everything else works, which makes it confusing.
+
+### Three things that trip this deployment up
+
+**The two projects reference each other.** The frontend needs the API's URL, and the API
+needs the frontend's URL for CORS. Deploy the API first, then the frontend with that URL,
+then update the API's `ALLOWED_ORIGINS` and redeploy it. Getting this wrong shows up as
+requests blocked in the browser console, not as a build failure.
+
+**`--type config` vs `--type secret`.** Vercel now asks whether a `NEXT_PUBLIC_` variable
+is deliberately public. The three frontend variables are `config` — they are meant to ship
+to the browser, and RLS is what makes that safe. `NEON_DATA_API_URL` on the API is `secret`;
+it is not a credential either, but nothing needs to read it from a browser.
+
+**Vite inlines env vars at build time.** `NEXT_PUBLIC_API_BASE_URL` is baked into the
+JavaScript when it compiles, so changing it in Vercel does nothing until the frontend is
+redeployed.
+
+### Verified on the live deployment
+
+- Health check returns 200
+- `/contacts` with no token returns 401; with a forged token, 401
+- CORS accepts `https://qw-network-tracker.vercel.app` and refuses other origins
+- Sign-in works, and contacts load
+- **Two-account test in production:** User A sees 3 contacts, User B sees 0, and B's attempts
+  to edit and delete A's contact both return 404
 
 ---
 
