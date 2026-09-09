@@ -29,6 +29,25 @@ export function createApp() {
 
   app.use(express.json({ limit: '64kb' }))
 
+  // A person who clicks the backend URL lands here. Without this route the
+  // root path returned a Vercel function crash, which looks like a broken
+  // deployment rather than "this is an API, there are no pages here".
+  app.get('/', (_req, res) => {
+    res.json({
+      service: 'Network Tracker API',
+      description:
+        'This is the backend. It serves JSON, not web pages. Open the app instead.',
+      app: 'https://qw-network-tracker.vercel.app',
+      endpoints: {
+        'GET /health': 'liveness check',
+        'GET /contacts': 'list your contacts (requires a signed-in token)',
+        'POST /contacts': 'create a contact',
+        'PATCH /contacts/:id': 'update one of your contacts',
+        'DELETE /contacts/:id': 'delete one of your contacts',
+      },
+    })
+  })
+
   app.get('/health', (_req, res) => {
     res.json({ ok: true, service: 'networking-tracker-api' })
   })

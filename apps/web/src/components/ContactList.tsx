@@ -296,16 +296,12 @@ export function ContactList({
 
                 {open && (
                   <tr className="border-b bg-muted/30 last:border-0">
+                    {/* Notes only. Every other field already has its own
+                        column, so repeating them here would just be the row
+                        printed twice. Notes is the one thing the table
+                        cannot show, being free text of any length. */}
                     <td colSpan={7} className="px-4 py-4">
-                      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <Detail label="Company" value={c.company} />
-                        <Detail label="Role" value={c.role} />
-                        <Detail label="Where we met" value={c.met_where} />
-                        <Detail label="Priority" value={c.priority} />
-                      </dl>
-                      <div className="mt-4">
-                        <Detail label="Notes" value={c.notes} />
-                      </div>
+                      <Detail label="Notes" value={c.notes} />
                     </td>
                   </tr>
                 )}

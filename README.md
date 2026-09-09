@@ -48,10 +48,10 @@ Test accounts are in §12 if you want to see the two-account isolation for yours
 | Search by name | ✅ |
 | Filter by priority | ✅ |
 | Sort by clicking a column header — name, company, priority, or date added | ✅ |
-| Date added shown in both layouts | ✅ |
+| Date added shown in both layouts (web and mobile) | ✅ |
 | Contacts survive a browser refresh | ✅ |
 | Blank names and invalid priorities fail with a clear message | ✅ |
-| Loading, empty, error, and populated states | ✅ |
+| Four list states, each with its own message: **loading** while contacts are fetched, **empty** when you have none yet, **no matches** when a filter excludes everything, **error** with a retry button when the request fails | ✅ |
 | Success confirmation after add, edit, and delete | ✅ |
 | Works on phone and desktop | ✅ |
 | Edit a contact | ✅ |
@@ -68,7 +68,7 @@ Test accounts are in §12 if you want to see the two-account isolation for yours
 | Backend | Express 5 + TypeScript | Small, unopinionated, and readable. The whole API is four routes; a heavier framework would add concepts without adding safety. |
 | Validation | Zod | Rules read like sentences and double as the unit-test surface. |
 | Database | Neon Postgres | Required by the assignment. Row Level Security is the reason the privacy guarantee is credible. |
-| Auth | Neon Managed Better Auth | Required. Also: password handling is easy to get subtly wrong, and this is not the place to hand-roll it. |
+| Auth | Neon Managed Better Auth | Required by the assignment. |
 | Data access | Neon Data API (PostgREST) | Required. Lets the API forward the user's own token so the database still decides what they may see. |
 | Testing | Vitest | Fast, no configuration, and the validation suite runs with no database or network. |
 | Hosting | Vercel | Required. Two projects, one per app. |
@@ -76,6 +76,16 @@ Test accounts are in §12 if you want to see the two-account isolation for yours
 ---
 
 ## 5. Architecture
+
+Five pieces, each with one job:
+
+| Piece | What it is | What it does |
+|---|---|---|
+| **Frontend** | `apps/web` — Vite + React, its own build | Everything you see and click. Holds no secrets and enforces no security; it asks the backend for data and renders it. |
+| **Backend** | `apps/api` — Express + Zod, its own build | Checks you are signed in, validates what you send, strips any ownership the browser tries to claim, then forwards your token onward. Holds no database password. |
+| **Database** | Neon Postgres | Stores the contacts, and is where security is actually enforced: RLS decides which rows you may touch, CHECK constraints decide what counts as valid data. |
+| **Authentication** | Neon Managed Better Auth | Verifies email and password, and issues the signed token that proves who you are. We never see or store a password. |
+| **Hosting** | Vercel — two projects | `qw-network-tracker` serves the frontend; `qw-network-tracker-api` runs the backend as a serverless function. Two separate builds and deployments, since the two apps are genuinely separate. Neon hosts the database and the auth service. |
 
 ```
 Browser  ── sign in ─────────────────────────▶  Neon Managed Better Auth
@@ -296,10 +306,6 @@ No database, network, or credentials, so it passes on a fresh clone. What it ver
 - Blank optional fields become `null` rather than `""`
 - On edit: partial updates work, but a blank name or invalid priority is still rejected, an empty update is refused, and `user_id` is still stripped
 
-One of these caught a real bug: `priority` carried a default that `.partial()` then injected
-into empty edit requests, so the "no changes" guard never fired and an empty edit could
-silently overwrite a priority.
-
 ### Isolation suite — 8 cases, the two-account proof
 
 Signs in as two real accounts and has User B attempt to reach User A's contact every way it
@@ -429,12 +435,17 @@ redeployed.
 
 ## 14. Known Limitations
 
-- **No automated isolation test.** Verified manually; not yet a test that runs on demand.
 - **The API does not verify the JWT signature itself.** It forwards the token and lets Neon validate it, relying on RLS as the boundary. Correct, but a forged token travels further into the system than necessary. Verifying at the edge with `jose` against Neon's JWKS would fail faster.
 - **Validation rules are written twice** — once in the browser for speed, once in the API for trust. They can drift. A shared package would fix it; the database constraints are the backstop either way.
 - **Search matches names only**, not company or notes.
 - **No pagination.** Fine for a personal contact list; it would not survive thousands of rows.
-- **The frontend can still reach the Data API directly**, since the URL is public. RLS makes that safe rather than harmful, but the API tier is not a chokepoint.
+- **The frontend holds the Data API URL, so it could query the database directly.** In
+  normal use it never does — every contact read and write goes through the API. But the URL
+  ships in the browser bundle, so a determined person could bypass the API tier. They would
+  gain nothing: RLS still restricts them to their own rows and the CHECK constraints still
+  reject bad data. The consequence is that the API is not the *only* door, so it cannot be
+  the place where security is enforced — which is why security lives in the database instead.
 
-**What I would do next**, in order: edit and delete in the UI; the automated two-account test;
-deploy; then JWT verification at the API edge.
+**What I would do next**, in order: verify the JWT signature at the API edge; share one
+validation module between the browser and the API instead of two copies; extend search to
+company and notes; add pagination.
