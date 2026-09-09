@@ -7,8 +7,8 @@ contacts are unreachable to every other user, and that guarantee is enforced by 
 itself rather than by the app being polite.** Postgres Row Level Security rejects rows that
 are not yours, so even a request that skips the app entirely comes back empty.
 
-> **Status: deployed and working.** The only remaining gap is screenshots (§3).
-> The build order is tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Status: complete.** Deployed, tested, and documented. Build history is in
+> [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -95,7 +95,72 @@ backend for clear errors, and the database is the one that cannot be talked arou
 
 ## 3. Screenshots
 
-> _Not yet done._
+Captured from the **live deployment**, not a local build, by
+[`scripts/screenshots.mjs`](scripts/screenshots.mjs). Run `node scripts/screenshots.mjs` to
+regenerate them; credentials are read from the gitignored env file, so no password appears in
+the script.
+
+### Signing in and out
+
+| Sign-in screen | Signed out again |
+|---|---|
+| ![The sign-in screen](docs/screenshots/01-sign-in.png) | ![Returned to the sign-in screen after signing out](docs/screenshots/13-signed-out.png) |
+
+### Adding a contact
+
+| Form filled in | Saved, with a confirmation |
+|---|---|
+| ![The add-contact form filled in](docs/screenshots/04-add-contact-filled.png) | ![The new contact appears at the top of the list](docs/screenshots/05-contact-created.png) |
+
+### It survives a refresh
+
+Reloading the page re-fetches from Postgres. Nothing is held in the browser.
+
+![The contact is still there after reloading the page](docs/screenshots/06-survives-refresh.png)
+
+### Notes, on an expanded row
+
+Every other field has a column; notes can be any length, so the row opens to show it.
+
+![A contact row expanded to reveal its notes](docs/screenshots/07-row-expanded-notes.png)
+
+### Editing and deleting
+
+| Editing | Deleting asks first |
+|---|---|
+| ![The edit dialog, pre-filled and with no placeholder text](docs/screenshots/08-edit-dialog.png) | ![A confirmation naming the contact being deleted](docs/screenshots/10-delete-confirm.png) |
+
+| Edit saved | Deleted |
+|---|---|
+| ![The role now reads Principal Designer](docs/screenshots/09-edit-saved.png) | ![The contact is gone from the list](docs/screenshots/11-deleted.png) |
+
+### Invalid input fails safely
+
+Submitting a blank name. The message appears beside the field, the field is outlined, and no
+request is sent. The API rejects the same thing independently — see §13.
+
+![Name is required, shown inline under the name field](docs/screenshots/03-validation-error.png)
+
+### The two-account privacy test
+
+**The important pair.** Same app, same database, same moment — different accounts.
+
+| User A — 6 contacts | User B — none |
+|---|---|
+| ![test-a@example.com sees six contacts](docs/screenshots/12-user-a-contacts.png) | ![test-b@example.com sees an empty list](docs/screenshots/14-user-b-sees-nothing.png) |
+
+User B is not being *shown* an empty list. The rows were never sent, because Postgres refused
+to return them. §12 proves this in a way a screenshot cannot: the isolation test queries the
+database directly with User B's token, bypassing the app entirely, and still gets nothing.
+
+### On a phone
+
+| Sign-in | Contacts |
+|---|---|
+| ![The sign-in screen at phone width](docs/screenshots/15-mobile-sign-in.png) | ![Contacts as stacked cards at phone width](docs/screenshots/16-mobile-contacts.png) |
+
+The brand panel is hidden below `lg` — on a phone it would push the form off-screen — and the
+table becomes stacked cards.
 
 ---
 
@@ -451,7 +516,7 @@ on proof of identity.
 **Two accounts, automated.** `test-a@example.com` and `test-b@example.com` are real accounts,
 and the isolation suite in §12 runs the full attack against them on demand.
 
-> **Not yet done:** side-by-side screenshots of this for the grading evidence.
+Side-by-side screenshots of exactly this are in §3.
 
 ---
 

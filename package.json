@@ -16,6 +16,7 @@
     "test": "npm run test --workspace=api"
   },
   "devDependencies": {
+    "playwright": "^1.63.0",
     "vercel": "^59.12.0"
   }
 }
