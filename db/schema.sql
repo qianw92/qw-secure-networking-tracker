@@ -36,7 +36,24 @@ create table if not exists public.contacts (
 
   -- The assignment allows exactly these three values. Enforced here so it is
   -- true no matter what code talks to the database.
-  constraint contacts_priority_valid check (priority in ('high', 'medium', 'low'))
+  constraint contacts_priority_valid check (priority in ('high', 'medium', 'low')),
+
+  -- ----------------------------------------------------------------------
+  -- Two columns that exist only so sorting behaves the way a person expects.
+  -- Both are GENERATED: the database derives them and keeps them in step, so
+  -- they can never disagree with the columns they come from.
+  -- ----------------------------------------------------------------------
+
+  -- Sorting by the priority text gives high, low, medium -- alphabetical and
+  -- meaningless. This ranks them 1/2/3 so the order reads high, medium, low.
+  priority_rank smallint generated always as (
+    case priority when 'high' then 1 when 'medium' then 2 else 3 end
+  ) stored,
+
+  -- Postgres compares text by byte value, so every capitalised name sorts
+  -- before every lowercase one and "alice" lands after "Zoe". Sorting on the
+  -- lowercased name fixes that.
+  name_sort text generated always as (lower(btrim(name))) stored
 );
 
 
@@ -46,6 +63,12 @@ create table if not exists public.contacts (
 -- ----------------------------------------------------------------------------
 create index if not exists contacts_user_created_idx
   on public.contacts (user_id, created_at desc);
+
+create index if not exists contacts_user_priority_idx
+  on public.contacts (user_id, priority_rank, name_sort);
+
+create index if not exists contacts_user_name_idx
+  on public.contacts (user_id, name_sort);
 
 
 -- ----------------------------------------------------------------------------

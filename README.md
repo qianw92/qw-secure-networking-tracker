@@ -295,6 +295,17 @@ Full source, with comments: [`db/schema.sql`](db/schema.sql).
 | `priority` | `text` | `not null`, `default 'medium'`, `check (priority in ('high','medium','low'))` |
 | `created_at` | `timestamptz` | `not null`, `default now()` |
 | `updated_at` | `timestamptz` | `not null`, maintained by a trigger |
+| `priority_rank` | `smallint` | **Generated.** `high`→1, `medium`→2, `low`→3 |
+| `name_sort` | `text` | **Generated.** The lowercased name |
+
+The last two exist only so sorting matches expectations. Sorting by the `priority` text
+gives high, low, medium — alphabetical, and meaningless. And Postgres compares text by byte
+value, so every capitalised name sorts before every lowercase one, putting "alice" after
+"Zoe". Sorting on `priority_rank` and `name_sort` fixes both.
+
+They are **generated** columns: the database derives them from `priority` and `name` and
+keeps them in step automatically, so they cannot drift out of agreement with the values they
+come from. Nothing writes to them directly.
 
 `user_id` is filled in **by the database**, from the signed-in user's token. The browser never
 supplies it, which is what makes ownership unforgeable rather than merely unlikely.

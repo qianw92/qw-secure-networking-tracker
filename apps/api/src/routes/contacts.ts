@@ -7,8 +7,33 @@ export const contactsRouter = Router()
 
 contactsRouter.use(requireAuth)
 
-/** Columns we are willing to sort by. Anything else is ignored. */
-const SORTABLE = new Set(['created_at', 'name', 'priority', 'company'])
+/**
+ * Sort keys the client may ask for, mapped to the column actually used.
+ *
+ * Two of them do not sort by the column they name, on purpose:
+ *
+ *   priority -> priority_rank   Sorting the text would give high, low,
+ *                               medium: alphabetical, and meaningless.
+ *                               priority_rank is 1/2/3 so the order reads
+ *                               high, medium, low.
+ *
+ *   name     -> name_sort       Postgres compares text by byte value, so
+ *                               every capitalised name sorts before every
+ *                               lowercase one and "alice" lands after "Zoe".
+ *                               name_sort is the lowercased name.
+ *
+ * Both are generated columns: the database derives them from priority and
+ * name, so they cannot drift out of step with the values they are based on.
+ *
+ * This is also an allowlist. Anything not listed here falls back to
+ * created_at rather than being passed through to the database.
+ */
+const SORT_COLUMNS: Record<string, string> = {
+  created_at: 'created_at',
+  name: 'name_sort',
+  priority: 'priority_rank',
+  company: 'company',
+}
 
 /**
  * Never let a database message reach the client. It can disclose table and
@@ -41,7 +66,8 @@ function databaseError(res: import('express').Response, message: string) {
 contactsRouter.get('/', async (req, res) => {
   const db = clientForToken(req.accessToken!)
 
-  const sort = SORTABLE.has(String(req.query.sort)) ? String(req.query.sort) : 'created_at'
+  const requested = String(req.query.sort)
+  const sort = SORT_COLUMNS[requested] ?? 'created_at'
   const ascending = req.query.dir === 'asc'
 
   let query = db.from('contacts').select('*')
@@ -57,7 +83,12 @@ contactsRouter.get('/', async (req, res) => {
     query = query.ilike('name', `%${search.trim()}%`)
   }
 
-  const { data, error } = await query.order(sort, { ascending })
+  // Within one sort value the order would otherwise be arbitrary and could
+  // change between requests, so break ties by name.
+  const { data, error } =
+    sort === 'name_sort'
+      ? await query.order(sort, { ascending })
+      : await query.order(sort, { ascending }).order('name_sort', { ascending: true })
 
   if (error) return databaseError(res, error.message)
   res.json({ data: data ?? [] })
