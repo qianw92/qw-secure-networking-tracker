@@ -317,7 +317,7 @@ after the API tier, which was the actual constraint.
 ### Actually remaining
 
 9. **Automated two-account isolation test.** The only outstanding *code* item. Everything it
-   asserts has been verified by hand and recorded in README §12 — this turns that into
+   asserts has been verified by hand and recorded in README §13 — this turns that into
    something a grader can run. Needs a second set of test credentials.
 10. **Deploy** — two Vercel projects, production env vars, both domains added to Neon Auth
     trusted origins. Needs Qianyin's Vercel account.

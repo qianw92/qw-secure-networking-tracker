@@ -7,7 +7,7 @@ contacts are unreachable to every other user, and that guarantee is enforced by 
 itself rather than by the app being polite.** Postgres Row Level Security rejects rows that
 are not yours, so even a request that skips the app entirely comes back empty.
 
-> **Status: deployed and working.** The only remaining gap is screenshots (§2).
+> **Status: deployed and working.** The only remaining gap is screenshots (§3).
 > The build order is tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
@@ -26,17 +26,80 @@ Two URLs because the frontend and backend are two separate applications with
 separate builds and separate deployments. The API serves no pages; opening it directly
 shows only JSON. **Sign in at the first URL.**
 
-Test accounts are in §12 if you want to see the two-account isolation for yourself.
+Test accounts are in §13 if you want to see the two-account isolation for yourself.
 
 ---
 
-## 2. Screenshots
+## 2. How It Works, In Plain Terms
+
+The three things worth understanding, without the jargon.
+
+### The schema — what a contact is
+
+The database holds one table, `contacts`. Think of it as a spreadsheet the database owns.
+Each row is one person you have met, with columns for their name, company, role, where you
+met, notes, and a priority.
+
+One column matters more than the rest: **`user_id`, the owner**. Every row is stamped with
+who it belongs to — and the stamp is applied *by the database*, not by the browser. The app
+never sends it. That is deliberate: if the browser could choose the owner, anyone could
+create a contact in someone else's name.
+
+The database also refuses nonsense. A name cannot be blank or just spaces, and a priority
+must be exactly `high`, `medium`, or `low`. Nothing else gets in, no matter what code is
+asking.
+
+### The RLS rule — why your contacts are private
+
+Row Level Security is a rule enforced *by the database itself* rather than by the app.
+
+Ordinarily an app decides what to show you: it fetches everything and displays your share.
+That works until the app has a bug. RLS flips it around — the database refuses to hand over
+rows that are not yours, so a bug in the app cannot leak anything, because the data never
+reaches it.
+
+Turning it on makes the table **deny-by-default**: nobody can read anything until a rule
+explicitly permits it. There are four rules, one each for reading, creating, editing, and
+deleting, and they all say the same thing:
+
+> **This row's owner must be you.**
+
+The editing rule has a second half worth knowing about. It says you may only edit rows you
+already own, **and** the row must still belong to you afterwards. Without that, you could
+edit one of your contacts and hand it to someone else.
+
+You can see this working: signed in as one account the app shows three contacts, and as
+another it shows none — same app, same database.
+
+### The request flow — what happens when you add a contact
+
+1. **You fill in the form and click Add.** The browser checks the obvious things first, so
+   you get an instant answer. This is a courtesy, not a defence: anyone can bypass it.
+2. **The browser collects your token.** Signing in gave you a tamper-proof pass, a bit like a
+   festival wristband — it says who you are and cannot be altered without breaking its seal.
+   It expires every fourteen minutes and renews itself.
+3. **The contact and the pass go to the backend.** If there is no pass, the request is
+   refused immediately.
+4. **The backend checks the data properly.** Blank name or an invalid priority gets a clear
+   message back. It also **throws away any owner the browser tried to specify.**
+5. **The backend passes your token to the database.** It never uses a password of its own —
+   it hands over yours, so the database still decides what you are allowed to touch.
+6. **The database has the final say.** It stamps the row with your ID, checks the rules
+   again, and applies Row Level Security.
+7. **The saved contact comes back** and appears in your list.
+
+Three layers check the same things, and that is the point. The browser is for speed, the
+backend for clear errors, and the database is the one that cannot be talked around.
+
+---
+
+## 3. Screenshots
 
 > _Not yet done._
 
 ---
 
-## 3. Features
+## 4. Features
 
 | Feature | Status |
 |---|---|
@@ -58,7 +121,7 @@ Test accounts are in §12 if you want to see the two-account isolation for yours
 
 ---
 
-## 4. Technology Stack
+## 5. Technology Stack
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -74,7 +137,7 @@ Test accounts are in §12 if you want to see the two-account isolation for yours
 
 ---
 
-## 5. Architecture
+## 6. Architecture
 
 Five pieces, each with one job:
 
@@ -135,7 +198,7 @@ separation the assignment asks for. **It is not the security boundary.**
 
 ---
 
-## 6. Repository Layout
+## 7. Repository Layout
 
 ```
 apps/
@@ -149,7 +212,7 @@ docs/
 
 ---
 
-## 7. Local Setup
+## 8. Local Setup
 
 Requires Node 22 or newer (`node --version`).
 
@@ -160,7 +223,7 @@ npm install
 ```
 
 Create the two environment files from their templates and fill in the values from your Neon
-project (§8):
+project (§9):
 
 ```bash
 cp apps/web/.env.example apps/web/.env.local
@@ -186,7 +249,7 @@ frontend calls it. The app cannot load contacts unless both are running.
 
 ---
 
-## 8. Environment Variables
+## 9. Environment Variables
 
 Real values live in `.env.local`, which is gitignored. `.env.example` is committed with
 placeholders. **No file in this repository contains a real secret.**
@@ -216,7 +279,7 @@ with a password. The schema was applied through the Neon console.
 
 ---
 
-## 9. Database Schema
+## 10. Database Schema
 
 Full source, with comments: [`db/schema.sql`](db/schema.sql).
 
@@ -240,7 +303,7 @@ supplies it, which is what makes ownership unforgeable rather than merely unlike
 
 ---
 
-## 10. Authentication and Row Level Security
+## 11. Authentication and Row Level Security
 
 Signing in returns a **JWT** — a token signed by Neon that cannot be altered without
 invalidating the signature. Its `sub` claim is the user's id. Postgres reads that claim through
@@ -276,7 +339,7 @@ nothing, so signed-out visitors cannot reach the table at all.
 
 ---
 
-## 11. Testing
+## 12. Testing
 
 ```bash
 npm test
@@ -341,7 +404,7 @@ contact is deleted afterwards, so repeat runs leave nothing behind.
 
 ---
 
-## 12. Security Verification
+## 13. Security Verification
 
 | Requirement | Status |
 |---|---|
@@ -351,7 +414,7 @@ contact is deleted afterwards, so repeat runs leave nothing behind.
 | Every policy restricts to `auth.user_id() = user_id` | ✅ |
 | Update policy prevents reassigning a row to another user | ✅ `WITH CHECK` |
 | No secret committed to Git | ✅ |
-| Two-account proof | ✅ Automated — 8 cases, §11 |
+| Two-account proof | ✅ Automated — 8 cases, §12 |
 
 **Verified by bypassing the browser** — requests sent straight to the API with a valid token,
 as someone with developer tools would:
@@ -375,13 +438,13 @@ the database assigned the row to the caller anyway.
 on proof of identity.
 
 **Two accounts, automated.** `test-a@example.com` and `test-b@example.com` are real accounts,
-and the isolation suite in §11 runs the full attack against them on demand.
+and the isolation suite in §12 runs the full attack against them on demand.
 
 > **Not yet done:** side-by-side screenshots of this for the grading evidence.
 
 ---
 
-## 13. Deployment
+## 14. Deployment
 
 Two Vercel projects from one repository, deployed with the Vercel CLI.
 
@@ -432,7 +495,7 @@ redeployed.
 
 ---
 
-## 14. Known Limitations
+## 15. Known Limitations
 
 - **The API does not verify the JWT signature itself.** It forwards the token and lets Neon validate it, relying on RLS as the boundary. Correct, but a forged token travels further into the system than necessary. Verifying at the edge with `jose` against Neon's JWKS would fail faster.
 - **Validation rules are written twice** — once in the browser for speed, once in the API for trust. They can drift. A shared package would fix it; the database constraints are the backstop either way.
