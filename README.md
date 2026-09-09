@@ -145,9 +145,9 @@ request is sent. The API rejects the same thing independently — see §13.
 
 **The important pair.** Same app, same database, same moment — different accounts.
 
-| User A — 6 contacts | User B — none |
+| User A — 3 contacts | User B — none |
 |---|---|
-| ![test-a@example.com sees six contacts](docs/screenshots/12-user-a-contacts.png) | ![test-b@example.com sees an empty list](docs/screenshots/14-user-b-sees-nothing.png) |
+| ![test-a@example.com sees three contacts](docs/screenshots/12-user-a-contacts.png) | ![test-b@example.com sees an empty list](docs/screenshots/14-user-b-sees-nothing.png) |
 
 User B is not being *shown* an empty list. The rows were never sent, because Postgres refused
 to return them. §12 proves this in a way a screenshot cannot: the isolation test queries the

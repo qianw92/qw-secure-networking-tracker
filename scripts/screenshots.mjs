@@ -112,6 +112,9 @@ const run = async () => {
   await shot(page, '11-deleted', { full: true })
 
   // Two-account proof: same app, same database, different views.
+  // Wait for the delete toast to fade first -- this pair is meant to be a
+  // clean like-for-like comparison, not a screenshot of a notification.
+  await page.waitForTimeout(6000)
   await shot(page, '12-user-a-contacts', { full: true })
   await signOut(page)
   await shot(page, '13-signed-out')
