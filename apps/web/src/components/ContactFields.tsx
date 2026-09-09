@@ -37,6 +37,15 @@ type Props = {
   /** Prefix so ids stay unique when the add form and edit dialog coexist. */
   idPrefix: string
   disabled?: boolean
+  /**
+   * Show example text in empty fields.
+   *
+   * On for the add form, where examples show what to type. Off when
+   * editing: grey example text in an empty field reads as though the
+   * contact actually has that company or role, and the only way to tell
+   * is to notice the shade of grey.
+   */
+  showPlaceholders?: boolean
 }
 
 export function ContactFields({
@@ -45,8 +54,10 @@ export function ContactFields({
   onChange,
   idPrefix,
   disabled,
+  showPlaceholders = true,
 }: Props) {
   const id = (name: string) => `${idPrefix}-${name}`
+  const ph = (example: string) => (showPlaceholders ? example : undefined)
 
   return (
     <>
@@ -61,7 +72,7 @@ export function ContactFields({
             aria-invalid={Boolean(fieldErrors.name)}
             disabled={disabled}
             onChange={(e) => onChange('name', e.target.value)}
-            placeholder="Jane Chen"
+            placeholder={ph("Jane Chen")}
           />
           <FieldError message={fieldErrors.name} />
         </div>
@@ -74,7 +85,7 @@ export function ContactFields({
             aria-invalid={Boolean(fieldErrors.company)}
             disabled={disabled}
             onChange={(e) => onChange('company', e.target.value)}
-            placeholder="Bain & Company"
+            placeholder={ph("Spotify")}
           />
           <FieldError message={fieldErrors.company} />
         </div>
@@ -87,7 +98,7 @@ export function ContactFields({
             aria-invalid={Boolean(fieldErrors.role)}
             disabled={disabled}
             onChange={(e) => onChange('role', e.target.value)}
-            placeholder="Associate Partner"
+            placeholder={ph("Group Product Manager")}
           />
           <FieldError message={fieldErrors.role} />
         </div>
@@ -100,7 +111,7 @@ export function ContactFields({
             aria-invalid={Boolean(fieldErrors.met_where)}
             disabled={disabled}
             onChange={(e) => onChange('met_where', e.target.value)}
-            placeholder="Haas Consulting Club mixer"
+            placeholder={ph("Haas Tech Club mixer")}
           />
           <FieldError message={fieldErrors.met_where} />
         </div>
@@ -135,7 +146,7 @@ export function ContactFields({
           aria-invalid={Boolean(fieldErrors.notes)}
           disabled={disabled}
           onChange={(e) => onChange('notes', e.target.value)}
-          placeholder="Offered to intro me to their recruiting lead."
+          placeholder={ph("Offered to intro me to their recruiting lead.")}
           rows={3}
         />
         <FieldError message={fieldErrors.notes} />

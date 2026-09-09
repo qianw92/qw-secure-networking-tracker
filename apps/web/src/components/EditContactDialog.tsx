@@ -84,6 +84,7 @@ export function EditContactDialog({ contact, onClose, onSaved }: Props) {
               onChange={set}
               idPrefix="edit"
               disabled={saving}
+              showPlaceholders={false}
             />
 
             {error && (

@@ -1,3 +1,4 @@
+import { Fragment, useState } from 'react'
 import type { Contact, ListOptions } from '@/lib/contacts'
 import type { SortKey } from '@/components/ContactFilters'
 import { Button } from '@/components/ui/button'
@@ -81,6 +82,18 @@ function SortableHeader({
   )
 }
 
+/** One label/value pair in the expanded panel. */
+function Detail({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div>
+      <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        {label}
+      </dt>
+      <dd className="mt-1 whitespace-pre-wrap">{value?.trim() ? value : '—'}</dd>
+    </div>
+  )
+}
+
 type Props = {
   contacts: Contact[]
   loading: boolean
@@ -108,6 +121,10 @@ export function ContactList({
 }: Props) {
   const sort = (options.sort ?? 'created_at') as SortKey
   const dir = options.dir ?? 'desc'
+
+  // Which row is open. Only one at a time -- several expanded rows at once
+  // makes the table harder to scan than the thing it is helping with.
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   // LOADING
   if (loading) {
@@ -224,9 +241,33 @@ export function ContactList({
               </tr>
             </thead>
             <tbody>
-              {contacts.map((c) => (
-                <tr key={c.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-medium">{c.name}</td>
+              {contacts.map((c) => {
+                const open = expandedId === c.id
+                return (
+                <Fragment key={c.id}>
+                <tr
+                  onClick={() => setExpandedId(open ? null : c.id)}
+                  className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                >
+                  <td className="px-4 py-3 font-medium">
+                    <span className="inline-flex items-center gap-2">
+                      {/* The real control, so this is reachable by keyboard.
+                          The row click is a convenience on top of it. */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setExpandedId(open ? null : c.id)
+                        }}
+                        aria-expanded={open}
+                        aria-label={open ? `Hide details for ${c.name}` : `Show details for ${c.name}`}
+                        className="text-muted-foreground transition-transform hover:text-foreground"
+                      >
+                        <span className={`inline-block ${open ? 'rotate-90' : ''}`}>›</span>
+                      </button>
+                      {c.name}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{c.company ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{c.role ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{c.met_where ?? '—'}</td>
@@ -236,7 +277,7 @@ export function ContactList({
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                     {formatAdded(c.created_at)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => onEdit(c)}>
                         Edit
@@ -252,7 +293,25 @@ export function ContactList({
                     </div>
                   </td>
                 </tr>
-              ))}
+
+                {open && (
+                  <tr className="border-b bg-muted/30 last:border-0">
+                    <td colSpan={7} className="px-4 py-4">
+                      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <Detail label="Company" value={c.company} />
+                        <Detail label="Role" value={c.role} />
+                        <Detail label="Where we met" value={c.met_where} />
+                        <Detail label="Priority" value={c.priority} />
+                      </dl>
+                      <div className="mt-4">
+                        <Detail label="Notes" value={c.notes} />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>
