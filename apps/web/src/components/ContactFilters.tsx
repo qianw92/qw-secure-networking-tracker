@@ -46,7 +46,7 @@ export function ContactFilters({ value, onChange, resultCount }: Props) {
 
   return (
     <div className="grid gap-3">
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end">
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end md:grid-cols-[1fr_auto]">
         <div className="grid gap-2">
           <Label htmlFor="search">Search by name</Label>
           <Input
@@ -78,7 +78,9 @@ export function ContactFilters({ value, onChange, resultCount }: Props) {
           </Select>
         </div>
 
-        <div className="grid gap-2">
+        {/* Desktop sorts by clicking column headers, so these are mobile-only:
+            cards have no headers to click. */}
+        <div className="grid gap-2 md:hidden">
           <Label htmlFor="sort-by">Sort by</Label>
           <Select
             value={sort}
@@ -100,6 +102,7 @@ export function ContactFilters({ value, onChange, resultCount }: Props) {
         <Button
           type="button"
           variant="outline"
+          className="md:hidden"
           onClick={() => onChange({ ...value, dir: dir === 'asc' ? 'desc' : 'asc' })}
           aria-label={`Sorted ${dir === 'asc' ? 'ascending' : 'descending'}. Click to reverse.`}
           title={dir === 'asc' ? 'Ascending' : 'Descending'}

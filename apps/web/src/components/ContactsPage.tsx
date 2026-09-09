@@ -62,6 +62,18 @@ export function ContactsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load, options.sort, options.dir, options.priority, debouncedQ])
 
+  function handleSort(column: NonNullable<ListOptions['sort']>) {
+    setOptions((o) => {
+      const current = o.sort ?? 'created_at'
+      if (current === column) {
+        return { ...o, dir: o.dir === 'asc' ? 'desc' : 'asc' }
+      }
+      // A new column starts ascending -- except dates, where "most recent
+      // first" is what people actually expect.
+      return { ...o, sort: column, dir: column === 'created_at' ? 'desc' : 'asc' }
+    })
+  }
+
   return (
     <div className="grid gap-6">
       <ContactForm
@@ -89,6 +101,8 @@ export function ContactsPage() {
           filtered={Boolean(debouncedQ.trim()) || (options.priority ?? 'all') !== 'all'}
           onEdit={setEditing}
           onDelete={setDeleting}
+          options={options}
+          onSort={handleSort}
         />
       </div>
 
