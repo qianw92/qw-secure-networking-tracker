@@ -124,7 +124,7 @@ export function ContactFields({
           disabled={disabled}
           onValueChange={(v) => onChange('priority', v as Priority)}
         >
-          <SelectTrigger id={id('priority')} className="w-full sm:w-48">
+          <SelectTrigger id={id('priority')} className="w-full capitalize sm:w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

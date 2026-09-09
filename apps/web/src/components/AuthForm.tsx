@@ -70,8 +70,8 @@ export function AuthForm() {
         </div>
 
         <p className="max-w-sm text-sm text-white/60">
-          Keep track of everyone you meet at Berkeley — who they are, where you
-          met, and what to follow up on. Your list is yours alone.
+          Keep track of everyone you meet at UC Berkeley — who they are, where
+          you met, and what to follow up on. Your list is yours alone.
         </p>
       </aside>
 
@@ -90,8 +90,8 @@ export function AuthForm() {
           </CardTitle>
           <CardDescription>
             {mode === 'signin'
-              ? 'Sign in to see your networking contacts.'
-              : 'Start tracking the people you meet at Berkeley.'}
+              ? 'Sign in to see your UC Berkeley networking contacts.'
+              : 'Start tracking the people you meet at UC Berkeley.'}
           </CardDescription>
         </CardHeader>
 
@@ -169,6 +169,18 @@ export function AuthForm() {
             >
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
+          </p>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Created by{' '}
+            <a
+              href="https://github.com/qianw92"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="font-medium underline underline-offset-4 hover:text-foreground"
+            >
+              Qian Wu
+            </a>
           </p>
           </CardContent>
         </Card>

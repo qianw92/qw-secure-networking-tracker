@@ -64,7 +64,7 @@ export function ContactFilters({ value, onChange, resultCount }: Props) {
             value={priority}
             onValueChange={(v) => onChange({ ...value, priority: v })}
           >
-            <SelectTrigger id="filter-priority" className="w-full sm:w-36">
+            <SelectTrigger id="filter-priority" className="w-full capitalize sm:w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
