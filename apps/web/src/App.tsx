@@ -26,13 +26,21 @@ export default function App() {
 
   return (
     <div className="min-h-svh bg-muted/30">
-      <header className="border-b bg-background">
+      {/* California Gold rule under the Berkeley Blue header. */}
+      <header className="border-b-4 border-california-gold bg-berkeley-blue text-white">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <div className="min-w-0">
-            <h1 className="text-lg font-semibold">Networking Tracker</h1>
-            <p className="truncate text-sm text-muted-foreground">{session.user.email}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-california-gold" />
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold">Network Tracker</h1>
+              <p className="truncate text-sm text-white/70">{session.user.email}</p>
+            </div>
           </div>
-          <Button variant="outline" onClick={() => auth.signOut()}>
+          <Button
+            variant="outline"
+            className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+            onClick={() => auth.signOut()}
+          >
             Sign out
           </Button>
         </div>

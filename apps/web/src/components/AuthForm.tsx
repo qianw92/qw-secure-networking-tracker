@@ -51,9 +51,40 @@ export function AuthForm() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      {/* Brand panel. Berkeley Blue with a California Gold rule.
+          Hidden below lg: on a phone it would push the form off-screen,
+          and signing in is the job -- the branding is not. */}
+      <aside className="relative hidden flex-col justify-between bg-berkeley-blue p-12 text-white lg:flex">
+        <div className="flex items-center gap-2 text-sm font-medium tracking-wide text-white/70">
+          <span className="inline-block h-2 w-2 rounded-full bg-california-gold" />
+          UC BERKELEY · HAAS
+        </div>
+
+        <div>
+          <h1 className="text-5xl leading-tight font-semibold">Network Tracker</h1>
+          <div className="mt-6 h-1 w-16 rounded bg-california-gold" />
+          <p className="mt-6 max-w-sm text-xl text-white/80">
+            Network tracking made easy.
+          </p>
+        </div>
+
+        <p className="max-w-sm text-sm text-white/60">
+          Keep track of everyone you meet at Berkeley — who they are, where you
+          met, and what to follow up on. Your list is yours alone.
+        </p>
+      </aside>
+
+      {/* Form panel */}
+      <main className="flex items-center justify-center bg-muted/30 p-6">
+        <Card className="w-full max-w-sm border-0 bg-transparent shadow-none sm:border sm:bg-card sm:shadow-sm">
+          {/* Shown only on small screens, where the brand panel is hidden. */}
+          <div className="mb-2 flex items-center gap-2 px-6 lg:hidden">
+            <span className="inline-block h-2 w-2 rounded-full bg-california-gold" />
+            <span className="text-sm font-semibold text-berkeley-blue">Network Tracker</span>
+          </div>
+
+          <CardHeader>
           <CardTitle className="text-xl">
             {mode === 'signin' ? 'Welcome back' : 'Create your account'}
           </CardTitle>
@@ -64,7 +95,7 @@ export function AuthForm() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+          <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4">
             {mode === 'signup' && (
               <div className="grid gap-2">
@@ -139,8 +170,9 @@ export function AuthForm() {
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
           </p>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   )
 }

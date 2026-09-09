@@ -5,6 +5,29 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------------------
+ * UC Berkeley / Haas brand colours, from the official palette.
+ *
+ * Berkeley Blue and California Gold are the two primary marks. Gold is used
+ * as a background or accent only, never as text on white -- #FDB515 on white
+ * fails contrast badly. Where gold text is wanted, Medalist is the darker
+ * variant that passes.
+ * ------------------------------------------------------------------------ */
+:root {
+    --berkeley-blue: #003262;
+    --california-gold: #FDB515;
+    --founders-rock: #3B7EA1;
+    --medalist: #C4820E;
+}
+
+@theme inline {
+    --color-berkeley-blue: var(--berkeley-blue);
+    --color-california-gold: var(--california-gold);
+    --color-founders-rock: var(--founders-rock);
+    --color-medalist: var(--medalist);
+}
+
+
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
@@ -55,18 +78,18 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
+    --primary: var(--berkeley-blue);
+    --primary-foreground: #ffffff;
     --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
+    --secondary-foreground: var(--berkeley-blue);
     --muted: oklch(0.97 0 0);
     --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --accent: #eef4f9;
+    --accent-foreground: var(--berkeley-blue);
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --ring: var(--founders-rock);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -90,8 +113,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
+    --primary: var(--founders-rock);
+    --primary-foreground: #ffffff;
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -101,7 +124,7 @@
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: var(--founders-rock);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);

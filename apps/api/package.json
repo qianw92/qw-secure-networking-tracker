@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Backend API for the Secure Networking Tracker. Validates input and forwards the caller's token to the Neon Data API.",
+  "description": "Backend API for Network Tracker. Validates input and forwards the caller's token to the Neon Data API.",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env.local src/server.ts",
     "build": "tsc --noEmit",
