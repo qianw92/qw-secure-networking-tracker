@@ -3,8 +3,7 @@
 Network tracking made easy — a private tracker for the people I want to stay connected
 with at Berkeley. Each
 person signs in, keeps their own list of contacts — name, company, role, where we met, notes,
-and a priority — and can search, filter, and sort it. The point of the project is not the
-contact list; it is that **one user's contacts are unreachable to every other user, and that
+and a priority — and can search, filter, and sort it. **One user's contacts are unreachable to every other user, and that
 guarantee is enforced by the database itself rather than by the app being polite.** Postgres
 Row Level Security rejects rows that are not yours, so even a request that skips the app
 entirely comes back empty.
