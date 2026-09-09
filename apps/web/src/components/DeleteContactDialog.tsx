@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { deleteContact, type Contact } from '@/lib/contacts'
+import { toast } from 'sonner'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +34,9 @@ export function DeleteContactDialog({ contact, onClose, onDeleted }: Props) {
     setDeleting(true)
 
     try {
+      const name = contact.name
       await deleteContact(contact.id)
+      toast.success(`${name} deleted.`)
       onDeleted()
       onClose()
     } catch (err) {

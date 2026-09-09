@@ -3,6 +3,7 @@ import { toDraft, updateContact, type Contact, type ContactDraft } from '@/lib/c
 import { validateContact, type FieldErrors } from '@/lib/validation'
 import { ContactFields } from '@/components/ContactFields'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -54,7 +55,8 @@ export function EditContactDialog({ contact, onClose, onSaved }: Props) {
     setSaving(true)
 
     try {
-      await updateContact(contact.id, draft)
+      const updated = await updateContact(contact.id, draft)
+      toast.success(`${updated.name} updated.`)
       onSaved()
       onClose()
     } catch (err) {

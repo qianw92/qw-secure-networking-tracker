@@ -4,6 +4,7 @@ import { validateContact, type FieldErrors } from '@/lib/validation'
 import { ContactFields } from '@/components/ContactFields'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
 
 export function ContactForm({ onCreated }: { onCreated: (c: Contact) => void }) {
   const [draft, setDraft] = useState<ContactDraft>(EMPTY_DRAFT)
@@ -35,6 +36,7 @@ export function ContactForm({ onCreated }: { onCreated: (c: Contact) => void }) 
     try {
       const created = await createContact(draft)
       setDraft(EMPTY_DRAFT)
+      toast.success(`${created.name} added to your contacts.`)
       onCreated(created)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save this contact.')

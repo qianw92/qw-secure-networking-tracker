@@ -2,6 +2,7 @@ import { auth } from '@/lib/neon'
 import { AuthForm } from '@/components/AuthForm'
 import { ContactsPage } from '@/components/ContactsPage'
 import { Button } from '@/components/ui/button'
+import { Toaster } from '@/components/ui/sonner'
 
 export default function App() {
   const { data: session, isPending } = auth.useSession()
@@ -15,7 +16,12 @@ export default function App() {
   }
 
   if (!session) {
-    return <AuthForm />
+    return (
+      <>
+        <AuthForm />
+        <Toaster position="top-center" />
+      </>
+    )
   }
 
   return (
@@ -35,6 +41,10 @@ export default function App() {
       <main className="mx-auto max-w-4xl px-4 py-8">
         <ContactsPage />
       </main>
+
+      {/* Confirms an action worked. Without this, a successful save and a
+          silently failed one look identical. */}
+      <Toaster position="top-center" />
     </div>
   )
 }

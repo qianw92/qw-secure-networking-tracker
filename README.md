@@ -35,10 +35,12 @@ entirely comes back empty.
 | View contacts in a table (desktop) or cards (mobile) | ✅ |
 | Search by name | ✅ |
 | Filter by priority | ✅ |
-| Sort by date added, name, priority, or company, ascending or descending | ✅ |
+| Sort by clicking a column header — name, company, priority, or date added | ✅ |
+| Date added shown in both layouts | ✅ |
 | Contacts survive a browser refresh | ✅ |
 | Blank names and invalid priorities fail with a clear message | ✅ |
 | Loading, empty, error, and populated states | ✅ |
+| Success confirmation after add, edit, and delete | ✅ |
 | Works on phone and desktop | ✅ |
 | Edit a contact | ✅ |
 | Delete a contact, with a confirmation step | ✅ |
@@ -79,6 +81,9 @@ Neon Data API  ──▶  Postgres
                      ├─ RLS: four policies, auth.user_id() = user_id
                      └─ CHECK constraints on name and priority
 ```
+
+Sorting and filtering run in Postgres, not in the browser. A row excluded by a filter is
+one the browser never received — the same principle that keeps other people's rows away.
 
 **What happens when I add a contact**
 
