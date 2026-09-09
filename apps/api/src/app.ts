@@ -73,3 +73,16 @@ export function createApp() {
 
   return app
 }
+
+/**
+ * Default export for Vercel.
+ *
+ * Vercel's Express preset treats this file as the entry point and requires a
+ * default export that is an app or server. Without it the root path returned
+ * "Invalid export found in module src/app.js" and crashed, while every other
+ * path happened to work.
+ *
+ * createApp() stays a named export so tests and server.ts can build their own
+ * instance without touching this one.
+ */
+export default createApp()

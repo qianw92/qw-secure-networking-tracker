@@ -105,7 +105,7 @@ qw-secure-networking-tracker/
 │   │   ├── package.json, tsconfig.json, vitest.config.ts
 │   │   ├── vercel.json           # rewrite /(.*) → /api
 │   │   ├── .env.example
-│   │   ├── api/index.ts          # Vercel serverless entry: exports the app
+│   │   ├── src/app.ts            # Express app; default export is the Vercel entry
 │   │   └── src/
 │   │       ├── server.ts         # local dev listener (port 8787)
 │   │       ├── app.ts            # Express: cors, json, routes, error handler
